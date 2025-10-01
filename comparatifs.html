@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparatif VPN 2025</title>
+<link rel="stylesheet" href="css/style.css">
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+<body>
+
+<header>
+<div class="container header-container">
+<h1>Comparatif VPN 2025</h1>
+<nav class="nav">
+<a href="index.html">Accueil</a>
+<a href="comparatifs.html" class="active">Comparatifs</a>
+<a href="top-vpn.html">Top VPN</a>
+<a href="guides.html">Guides</a>
+<a href="avis.html">Avis</a>
+</nav>
+</div>
+</header>
+
+<main class="container">
+
+<!-- Filtres -->
+<section class="filter">
+<input type="number" id="min-price" placeholder="Prix min (€)">
+<input type="number" id="max-price" placeholder="Prix max (€)">
+<input type="number" id="min-rating" placeholder="Note min (⭐)">
+<button onclick="applyFilters()">Filtrer</button>
+</section>
+
+<!-- Tableau -->
+<section id="tableau">
+<table id="vpn-table" class="display" style="width:100%">
+<thead>
+<tr>
+<th>Logo</th>
+<th>VPN</th>
+<th>Prix (€)</th>
+<th>Serveurs</th>
+<th>Dispositifs</th>
+<th>Note</th>
+<th>Offre</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+
+</main>
+
+<footer>
+<div class="container footer-container">
+<p>&copy; 2025 VPN Compare. Tous droits réservés.</p>
+</div>
+</footer>
+
+<!-- jQuery + DataTables -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+let vpnData = []; // stocke le JSON pour filtrage
+
+// Charger le JSON
+fetch('vpn-list.json')
+.then(res => res.json())
+.then(data => {
+    vpnData = data;
+    populateTable(vpnData);
+
+    // Initialiser DataTables
+    $('#vpn-table').DataTable({
+        pageLength: 50,
+        order: [[5, 'desc']] // trier par note
+    });
+});
+
+// Fonction pour remplir le tableau
+function populateTable(vpns) {
+    const tbody = document.querySelector('#vpn-table tbody');
+    tbody.innerHTML = ''; // reset
+    vpns.forEach(vpn => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><img src="${vpn.logo || 'logos/default.png'}" alt="${vpn.name}" width="40"></td>
+            <td>${vpn.name}</td>
+            <td>${vpn.price || 'N/A'}</td>
+            <td>${vpn.servers || 'N/A'}</td>
+            <td>${vpn.devices || 'N/A'}</td>
+            <td>${vpn.rating || 'N/A'} ⭐</td>
+            <td><a href="#" class="btn">Voir l’offre</a></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Filtrer le tableau
+function applyFilters() {
+    const minPrice = parseFloat(document.getElementById('min-price').value) || 0;
+    const maxPrice = parseFloat(document.getElementById('max-price').value) || Infinity;
+    const minRating = parseFloat(document.getElementById('min-rating').value) || 0;
+
+    const filtered = vpnData.filter(vpn => {
+        const price = parseFloat(vpn.price) || 0;
+        const rating = parseFloat(vpn.rating) || 0;
+        return price >= minPrice && price <= maxPrice && rating >= minRating;
+    });
+
+    // Détruire et recréer DataTable
+    const table = $('#vpn-table').DataTable();
+    table.clear();
+    filtered.forEach(vpn => {
+        table.row.add([
+            `<img src="${vpn.logo || 'logos/default.png'}" alt="${vpn.name}" width="40">`,
+            vpn.name,
+            vpn.price || 'N/A',
+            vpn.servers || 'N/A',
+            vpn.devices || 'N/A',
+            `${vpn.rating || 'N/A'} ⭐`,
+            `<a href="#" class="btn">Voir l’offre</a>`
+        ]);
+    });
+    table.draw();
+}
+</script>
+
+</body>
+</html>
